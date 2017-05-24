@@ -69,6 +69,9 @@ class SqlBuilder
 	/** @var string grouping condition */
 	protected $having = '';
 
+	/** @var string */
+	protected $forceIndex = '';
+
 	/** @var array of reserved table names associated with chain */
 	protected $reservedTableNames = [];
 
@@ -226,8 +229,11 @@ class SqlBuilder
 			$querySelect = $this->buildSelect([$prefix . '*']);
 		}
 
+		if ($this->forceIndex)
+			$forceIndex = ' FORCE INDEX (' . $this->forceIndex . ')';
+
 		$queryJoins = $this->buildQueryJoins($joins, $finalJoinConditions);
-		$query = "{$querySelect} FROM {$this->delimitedTable}{$queryJoins}{$queryCondition}{$queryEnd}";
+		$query = "{$querySelect} FROM {$this->delimitedTable}{$forceIndex}{$queryJoins}{$queryCondition}{$queryEnd}";
 
 		$this->driver->applyLimit($query, $this->limit, $this->offset);
 
@@ -547,6 +553,14 @@ class SqlBuilder
 	{
 		$this->having = $having;
 		$this->parameters['having'] = $params;
+	}
+
+	/**
+	 * @param string
+	 */
+	public function setForceIndex($name)
+	{
+		$this->forceIndex = $name;
 	}
 
 
