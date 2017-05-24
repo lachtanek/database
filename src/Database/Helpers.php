@@ -177,9 +177,10 @@ class Helpers
 
 	/**
 	 * Import SQL dump from file - extremely fast.
+	 * @param  $onProgress  function (int $count, ?float $percent): void
 	 * @return int  count of commands
 	 */
-	public static function loadFromFile(Connection $connection, $file): int
+	public static function loadFromFile(Connection $connection, string $file, callable $onProgress = NULL): int
 	{
 		@set_time_limit(0); // @ function may be disabled
 
@@ -188,12 +189,14 @@ class Helpers
 			throw new Nette\FileNotFoundException("Cannot open file '$file'.");
 		}
 
-		$count = 0;
+		$stat = fstat($handle);
+		$count = $size = 0;
 		$delimiter = ';';
 		$sql = '';
 		$pdo = $connection->getPdo(); // native query without logging
 		while (!feof($handle)) {
 			$s = (string) fgets($handle);
+			$size += strlen($s);
 			if (!strncasecmp($s, 'DELIMITER ', 10)) {
 				$delimiter = trim(substr($s, 10));
 
@@ -202,6 +205,9 @@ class Helpers
 				$pdo->exec($sql);
 				$sql = '';
 				$count++;
+				if ($onProgress) {
+					call_user_func($onProgress, $count, isset($stat['size']) ? $size * 100 / $stat['size'] : NULL);
+				}
 
 			} else {
 				$sql .= $s;
@@ -210,6 +216,9 @@ class Helpers
 		if (rtrim($sql) !== '') {
 			$pdo->exec($sql);
 			$count++;
+			if ($onProgress) {
+				call_user_func($onProgress, $count, isset($stat['size']) ? 100 : NULL);
+			}
 		}
 		fclose($handle);
 		return $count;
