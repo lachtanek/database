@@ -193,21 +193,21 @@ class Helpers
 		$sql = '';
 		$pdo = $connection->getPdo(); // native query without logging
 		while (!feof($handle)) {
-			$s = rtrim((string) fgets($handle));
+			$s = (string) fgets($handle);
 			if (!strncasecmp($s, 'DELIMITER ', 10)) {
-				$delimiter = substr($s, 10);
+				$delimiter = trim(substr($s, 10));
 
-			} elseif (substr($s, -strlen($delimiter)) === $delimiter) {
-				$sql .= substr($s, 0, -strlen($delimiter));
+			} elseif (substr($ts = rtrim($s), -strlen($delimiter)) === $delimiter) {
+				$sql .= substr($ts, 0, -strlen($delimiter));
 				$pdo->exec($sql);
 				$sql = '';
 				$count++;
 
 			} else {
-				$sql .= $s . "\n";
+				$sql .= $s;
 			}
 		}
-		if (trim($sql) !== '') {
+		if (rtrim($sql) !== '') {
 			$pdo->exec($sql);
 			$count++;
 		}
