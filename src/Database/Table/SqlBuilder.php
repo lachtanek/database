@@ -229,6 +229,7 @@ class SqlBuilder
 			$querySelect = $this->buildSelect([$prefix . '*']);
 		}
 
+		$forceIndex = '';
 		if ($this->forceIndex)
 			$forceIndex = ' FORCE INDEX (' . $this->forceIndex . ')';
 
